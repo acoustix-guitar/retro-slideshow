@@ -142,9 +142,9 @@
   .caption-bar {
     background: rgba(0,0,0,0.72); position: absolute;
     bottom: 0; left: 0; right: 0; z-index: 12;
-    padding: 14px 14px; display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 14px; display: flex; justify-content: space-between; align-items: center;
   }
-  .caption-text { font-size: 1.5rem; letter-spacing: 0.08em; color: var(--cream); opacity: 0.85; }
+  .caption-text { font-size: 0.78rem; letter-spacing: 0.08em; color: var(--cream); opacity: 0.85; }
   .slide-counter { font-family: 'Share Tech Mono', monospace; font-size: 0.72rem; color: var(--amber-dk); letter-spacing: 0.12em; }
   .progress-bar { height: 3px; background: rgba(255,255,255,0.1); position: absolute; bottom: 0; left: 0; right: 0; z-index: 13; }
   .progress-fill { height: 100%; background: var(--amber); width: 0%; transition: width 0.1s linear; box-shadow: 0 0 6px var(--amber); }
@@ -317,6 +317,125 @@
   .toggle-switch input:checked + .toggle-track::after { transform: translateX(24px); background: var(--amber); box-shadow: 0 0 6px var(--amber); }
   .toggle-label { font-family: 'Share Tech Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; color: var(--cream); }
 
+  /* ── PANEL TOGGLE BAR ────────────────────────────────── */
+  .panel-toggle-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; margin-top: 14px; cursor: pointer;
+    padding: 7px 20px;
+    background: linear-gradient(180deg, #2a1608 0%, #1a0c04 100%);
+    border: 1.5px solid #5a3520; border-radius: 3px;
+    transition: border-color 0.2s, background 0.2s;
+    user-select: none;
+  }
+  .panel-toggle-bar:hover {
+    border-color: var(--amber-dk);
+    background: linear-gradient(180deg, #3a2010 0%, #250e04 100%);
+  }
+  .panel-toggle-label {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.28em; color: var(--amber-dk); text-transform: uppercase;
+  }
+  .panel-toggle-arrow {
+    font-size: 0.75rem; color: var(--amber-dk);
+    transition: transform 0.35s ease;
+    line-height: 1;
+  }
+  .panel-toggle-bar.open .panel-toggle-arrow { transform: rotate(180deg); }
+  .panel-toggle-bar.open .panel-toggle-label { color: var(--amber); }
+  .panel-toggle-bar.open { border-color: var(--amber-dk); }
+
+  /* decorative side lines */
+  .panel-toggle-bar::before,
+  .panel-toggle-bar::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, #5a3520);
+  }
+  .panel-toggle-bar::after {
+    background: linear-gradient(90deg, #5a3520, transparent);
+  }
+
+  /* collapsible wrapper */
+  .panel-collapsible {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.38s ease;
+  }
+  .panel-collapsible.open { grid-template-rows: 1fr; }
+  .panel-collapsible-inner { overflow: hidden; }
+
+  /* ── FULLSCREEN ──────────────────────────────────────── */
+  .fs-btn {
+    position: absolute; top: 10px; right: 10px; z-index: 22;
+    background: rgba(20,8,2,0.75); border: 1.5px solid var(--amber-dk);
+    color: var(--amber); font-size: 1rem; width: 34px; height: 34px;
+    border-radius: 3px; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    line-height: 1;
+  }
+  .fs-btn:hover {
+    background: var(--brown-lt); border-color: var(--amber);
+    box-shadow: 0 0 10px rgba(232,168,32,0.3);
+  }
+
+  /* Fullscreen overlay */
+  #fsOverlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 10000;
+    background: #000;
+    flex-direction: column; align-items: center; justify-content: center;
+  }
+  #fsOverlay.active { display: flex; }
+
+  #fsViewer {
+    position: relative; width: 100vw; height: 100vh;
+  }
+  #fsViewer img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: contain;
+  }
+
+  /* fullscreen nav */
+  .fs-nav {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 5;
+    background: rgba(20,8,2,0.55); border: 1.5px solid var(--amber-dk);
+    color: var(--amber); font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem;
+    width: 52px; height: 72px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 3px; transition: background 0.2s;
+  }
+  .fs-nav:hover { background: rgba(74,45,26,0.8); border-color: var(--amber); }
+  .fs-nav.prev { left: 16px; }
+  .fs-nav.next { right: 16px; }
+
+  /* fullscreen caption */
+  .fs-caption {
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 6;
+    background: rgba(0,0,0,0.65); padding: 8px 60px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .fs-caption-text {
+    font-family: 'Special Elite', serif; font-size: 0.9rem;
+    color: var(--cream); letter-spacing: 0.06em;
+  }
+  .fs-counter {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: var(--amber-dk);
+  }
+
+  /* close button */
+  .fs-close {
+    position: absolute; top: 14px; right: 16px; z-index: 7;
+    background: rgba(20,8,2,0.75); border: 1.5px solid var(--amber-dk);
+    color: var(--amber); font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem; letter-spacing: 0.15em;
+    padding: 6px 12px; border-radius: 3px; cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .fs-close:hover { background: var(--brown-lt); border-color: var(--amber); }
+
+  /* fs progress */
+  .fs-progress { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; z-index: 7; background: rgba(255,255,255,0.1); }
+  .fs-progress-fill { height: 100%; background: var(--amber); width: 0%; box-shadow: 0 0 6px var(--amber); }
+
   /* ── FOOTER ──────────────────────────────────────────── */
   footer {
     text-align: center; padding: 14px 20px 20px;
@@ -341,7 +460,7 @@
     <h1>RETRO SLIDESHOW</h1>
     <div class="brand-dot"></div>
   </div>
-  <p class="subtitle">Automatisches Bildprojektionssystem · Modell 1968</p>
+
 </header>
 
 <main class="stage">
@@ -365,6 +484,7 @@
       </div>
       <button class="nav-btn prev" onclick="changeSlide(-1)">‹</button>
       <button class="nav-btn next" onclick="changeSlide(1)">›</button>
+      <button class="fs-btn" onclick="openFullscreen()" title="Vollbild (F)">⛶</button>
       <div class="caption-bar">
         <span class="caption-text" id="captionText">—</span>
         <span class="slide-counter" id="slideCounter">0 / 0</span>
@@ -374,6 +494,16 @@
 
     <div class="dot-strip" id="dotStrip"></div>
   </div>
+
+  <!-- PANEL TOGGLE BAR -->
+  <div class="panel-toggle-bar" id="panelToggleBar" onclick="togglePanel()">
+    <span class="panel-toggle-label" id="panelToggleLabel">◈ Einstellungen</span>
+    <span class="panel-toggle-arrow" id="panelToggleArrow">▼</span>
+  </div>
+
+  <!-- COLLAPSIBLE WRAPPER -->
+  <div class="panel-collapsible" id="panelCollapsible">
+    <div class="panel-collapsible-inner">
 
   <!-- CONTROL PANEL -->
   <div class="control-panel">
@@ -492,8 +622,26 @@
       </div>
     </div>
 
-  </div>
+  </div><!-- end .control-panel -->
+    </div><!-- end .panel-collapsible-inner -->
+  </div><!-- end .panel-collapsible -->
+
 </main>
+
+<!-- ── FULLSCREEN OVERLAY ──────────────────────────────── -->
+<div id="fsOverlay">
+  <div id="fsViewer">
+    <!-- fs slides injected by JS -->
+    <button class="fs-nav prev" onclick="fsChangeSlide(-1)">‹</button>
+    <button class="fs-nav next" onclick="fsChangeSlide(1)">›</button>
+    <button class="fs-close" onclick="closeFullscreen()">ESC · SCHLIESSEN</button>
+    <div class="fs-caption">
+      <span class="fs-caption-text" id="fsCaptionText">—</span>
+      <span class="fs-counter" id="fsCounter">0 / 0</span>
+    </div>
+    <div class="fs-progress"><div class="fs-progress-fill" id="fsProgressFill"></div></div>
+  </div>
+</div>
 
 <footer>◈ Retro Slideshow MK II — Bildprojektionssystem ◈ Alle Rechte vorbehalten · Anno 1968 ◈</footer>
 
@@ -564,7 +712,7 @@ let autoplayTimer = null;
 let progressTimer = null;
 let progressStart = null;
 let intervalSec   = 30;
-let isPlaying     = true;
+let isPlaying     = false;
 let vuAnimFrame   = null;
 let audioMode     = 'perslide'; // 'global' | 'perslide'
 
@@ -978,17 +1126,113 @@ function applyManualInterval() {
 }
 
 // ═══════════════════════════════════════════════════════════
+//  PANEL TOGGLE
+// ═══════════════════════════════════════════════════════════
+
+let panelOpen = false;
+
+function togglePanel() {
+  panelOpen = !panelOpen;
+  const collapsible = document.getElementById('panelCollapsible');
+  const bar         = document.getElementById('panelToggleBar');
+  const label       = document.getElementById('panelToggleLabel');
+  collapsible.classList.toggle('open', panelOpen);
+  bar.classList.toggle('open', panelOpen);
+  label.textContent = panelOpen ? '◈ Einstellungen' : '◈ Einstellungen';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FULLSCREEN
+// ═══════════════════════════════════════════════════════════
+
+let fsActive = false;
+
+function buildFsSlides() {
+  const viewer = document.getElementById('fsViewer');
+  // remove old fs-imgs if any
+  viewer.querySelectorAll('.fs-img').forEach(el => el.remove());
+  SLIDES.forEach((s, i) => {
+    const img = document.createElement('img');
+    img.src = s.src; img.alt = s.caption; img.className = 'fs-img';
+    img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 0.6s ease;z-index:1;';
+    img.dataset.index = i;
+    viewer.insertBefore(img, viewer.querySelector('.fs-nav'));
+  });
+}
+
+function fsShowSlide(idx) {
+  // Mirror main slide index
+  document.querySelectorAll('.fs-img').forEach((img, i) => {
+    img.style.opacity = i === idx ? '1' : '0';
+    img.style.zIndex  = i === idx ? '2'  : '1';
+  });
+  document.getElementById('fsCaptionText').textContent = SLIDES[idx]?.caption || '—';
+  document.getElementById('fsCounter').textContent = `${displayIndex + 1} / ${SLIDES.length}`;
+  // sync progress fill width from main
+  document.getElementById('fsProgressFill').style.width =
+    document.getElementById('progressFill').style.width;
+}
+
+function openFullscreen() {
+  if (SLIDES.length === 0) return;
+  fsActive = true;
+  buildFsSlides();
+  const overlay = document.getElementById('fsOverlay');
+  overlay.classList.add('active');
+  fsShowSlide(currentSlide);
+  document.body.style.overflow = 'hidden';
+  // sync progress live
+  startFsProgressSync();
+}
+
+function closeFullscreen() {
+  fsActive = false;
+  document.getElementById('fsOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+  stopFsProgressSync();
+}
+
+function fsChangeSlide(dir) {
+  changeSlide(dir);           // drives main state
+  fsShowSlide(currentSlide);  // mirror to overlay
+}
+
+// Keep fs progress bar in sync with main
+let fsSyncFrame = null;
+function startFsProgressSync() {
+  function sync() {
+    const w = document.getElementById('progressFill').style.width;
+    document.getElementById('fsProgressFill').style.width = w;
+    // also keep slide in sync if autoplay advances it
+    fsShowSlide(currentSlide);
+    fsSyncFrame = requestAnimationFrame(sync);
+  }
+  fsSyncFrame = requestAnimationFrame(sync);
+}
+function stopFsProgressSync() {
+  if (fsSyncFrame) { cancelAnimationFrame(fsSyncFrame); fsSyncFrame = null; }
+}
+
+// ═══════════════════════════════════════════════════════════
 //  KEYBOARD
 // ═══════════════════════════════════════════════════════════
 
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT') return;
-  if (e.key === 'ArrowLeft')  changeSlide(-1);
-  if (e.key === 'ArrowRight') changeSlide(1);
+
+  // ESC closes fullscreen
+  if (e.key === 'Escape' && fsActive) { closeFullscreen(); return; }
+
+  if (e.key === 'ArrowLeft')  { changeSlide(-1); if (fsActive) fsShowSlide(currentSlide); }
+  if (e.key === 'ArrowRight') { changeSlide(1);  if (fsActive) fsShowSlide(currentSlide); }
   if (e.key === ' ') { e.preventDefault(); toggleAutoplay(); }
+  if (e.key === 'f' || e.key === 'F') {
+    fsActive ? closeFullscreen() : openFullscreen();
+  }
   if (e.key === 'm' || e.key === 'M') {
     audioMode === 'global' ? toggleAudio() : toggleSlideAudio();
   }
+  if (e.key === 'p' || e.key === 'P') togglePanel();
 });
 
 window.addEventListener('DOMContentLoaded', init);
