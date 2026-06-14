@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RETRO SLIDESHOW — MK II</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Special+Elite&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --amber:    #E8A820;
+    --amber-dk: #B07A08;
+    --brown:    #2C1810;
+    --brown-lt: #4A2D1A;
+    --orange:   #C4531A;
+    --cream:    #F5E6C8;
+    --olive:    #4A5C2A;
+    --olive-lt: #6B8A3A;
+    --dark:     #1A0F08;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--dark);
+    color: var(--cream);
+    font-family: 'Special Elite', serif;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+    opacity: 0.55;
+  }
+
+  /* ── HEADER ─────────────────────────────────────────── */
+  header {
+    text-align: center;
+    padding: 22px 20px 10px;
+    background: linear-gradient(180deg, #0e0804 0%, transparent 100%);
+  }
+  .brand-line {
+    display: flex; align-items: center; justify-content: center; gap: 18px;
+  }
+  .brand-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--amber); box-shadow: 0 0 8px var(--amber);
+    animation: blink 2.4s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.8rem);
+    letter-spacing: 0.18em; color: var(--amber); line-height: 1;
+    text-shadow: 0 0 30px rgba(232,168,32,0.4), 2px 2px 0 var(--brown);
+  }
+  .subtitle {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.35em; color: var(--amber-dk); margin-top: 4px; text-transform: uppercase;
+  }
+
+  /* ── LAYOUT ──────────────────────────────────────────── */
+  .stage {
+    max-width: 1100px; margin: 0 auto; padding: 10px 20px 30px;
+    display: flex; flex-direction: column; gap: 0;
+  }
+
+  /* ── PROJECTOR FRAME ─────────────────────────────────── */
+  .projector-frame {
+    position: relative;
+    background: linear-gradient(145deg, #3d2414 0%, #1e0e06 40%, #2a1509 100%);
+    border: 3px solid #5a3520; border-radius: 6px; padding: 16px;
+    box-shadow: inset 0 2px 4px rgba(255,200,100,0.08),
+      inset 0 -2px 4px rgba(0,0,0,0.6), 0 8px 40px rgba(0,0,0,0.8), 0 0 0 1px #1a0a04;
+  }
+  .projector-frame::before {
+    content: ''; position: absolute; inset: 0; border-radius: 4px; pointer-events: none;
+    background-image: repeating-linear-gradient(92deg, transparent 0px, transparent 18px,
+      rgba(255,200,80,0.018) 19px, transparent 20px);
+  }
+
+  .sprocket-strip {
+    display: flex; align-items: center; gap: 0; margin-bottom: 10px;
+  }
+  .sprocket-strip span {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.58rem;
+    letter-spacing: 0.2em; color: var(--amber-dk); opacity: 0.7; flex: 1;
+  }
+  .sprocket-strip span:last-child { text-align: right; }
+  .sprockets { display: flex; gap: 6px; align-items: center; }
+  .sprocket-hole {
+    width: 10px; height: 7px; border: 1.5px solid var(--amber-dk);
+    border-radius: 2px; opacity: 0.5;
+  }
+
+  /* ── VIEWER ──────────────────────────────────────────── */
+  .viewer-wrap {
+    position: relative; width: 100%; aspect-ratio: 16/9;
+    background: #000; overflow: hidden;
+    border: 2px solid #1a0a04;
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.9), 0 0 0 1px #3a1e0a;
+  }
+
+  .viewer-wrap::before {
+    content: ''; position: absolute; inset: 0; z-index: 11; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.75) 100%);
+  }
+  .slide {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; opacity: 0; transition: opacity 0.7s ease; z-index: 1;
+  }
+  .slide.active { opacity: 1; z-index: 2; }
+  .slide-placeholder {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px; z-index: 3;
+    color: var(--amber-dk); font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem; letter-spacing: 0.1em; opacity: 0.5; pointer-events: none;
+  }
+  .placeholder-icon { font-size: 3rem; opacity: 0.4; }
+
+  .nav-btn {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    z-index: 20; background: rgba(30,10,2,0.7);
+    border: 2px solid var(--amber-dk); color: var(--amber);
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem;
+    width: 44px; height: 60px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    line-height: 1; border-radius: 3px;
+  }
+  .nav-btn:hover {
+    background: var(--brown-lt); border-color: var(--amber);
+    box-shadow: 0 0 12px rgba(232,168,32,0.35);
+  }
+  .nav-btn.prev { left: 10px; }
+  .nav-btn.next { right: 10px; }
+
+  .caption-bar {
+    background: rgba(0,0,0,0.72); position: absolute;
+    bottom: 0; left: 0; right: 0; z-index: 12;
+    padding: 14px 14px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .caption-text { font-size: 1.5rem; letter-spacing: 0.08em; color: var(--cream); opacity: 0.85; }
+  .slide-counter { font-family: 'Share Tech Mono', monospace; font-size: 0.72rem; color: var(--amber-dk); letter-spacing: 0.12em; }
+  .progress-bar { height: 3px; background: rgba(255,255,255,0.1); position: absolute; bottom: 0; left: 0; right: 0; z-index: 13; }
+  .progress-fill { height: 100%; background: var(--amber); width: 0%; transition: width 0.1s linear; box-shadow: 0 0 6px var(--amber); }
+
+  /* ── DOTS ────────────────────────────────────────────── */
+  .dot-strip { display: flex; justify-content: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--brown-lt); border: 1.5px solid var(--amber-dk);
+    cursor: pointer; transition: background 0.2s, box-shadow 0.2s;
+  }
+  .dot.active { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  .dot:hover { background: var(--amber-dk); }
+
+  /* ── CONTROL PANEL ───────────────────────────────────── */
+  .control-panel {
+    margin-top: 16px;
+    background: linear-gradient(160deg, #2e1a0c 0%, #1c0d06 100%);
+    border: 2px solid #5a3520; border-radius: 4px;
+    padding: 22px 20px 16px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 20px; align-items: start;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,200,100,0.07);
+    position: relative; overflow: hidden;
+  }
+  .control-panel::before {
+    content: '■ CONTROL PANEL ■'; position: absolute; top: -1px;
+    left: 50%; transform: translateX(-50%);
+    font-family: 'Share Tech Mono', monospace; font-size: 0.58rem;
+    letter-spacing: 0.25em; color: var(--amber-dk); background: #2e1a0c;
+    padding: 0 10px; white-space: nowrap;
+  }
+
+  .panel-section { display: flex; flex-direction: column; gap: 10px; }
+  .panel-label {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.25em; color: var(--amber-dk); text-transform: uppercase;
+    border-bottom: 1px solid rgba(176,122,8,0.3); padding-bottom: 5px; margin-bottom: 2px;
+  }
+
+  /* ── BUTTONS ─────────────────────────────────────────── */
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .retro-btn {
+    font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.12em; font-size: 1rem;
+    padding: 7px 14px;
+    background: linear-gradient(180deg, #4a2d1a 0%, #2c1810 100%);
+    border: 2px solid #7a4a28; border-bottom-color: #1a0a04; border-right-color: #1a0a04;
+    color: var(--cream); cursor: pointer; border-radius: 3px; transition: all 0.1s;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    box-shadow: 2px 2px 0 #1a0a04, inset 0 1px 0 rgba(255,220,140,0.1);
+  }
+  .retro-btn:active { transform: translate(2px,2px); box-shadow: 0 0 0 #1a0a04; }
+  .retro-btn:hover {
+    background: linear-gradient(180deg, #6a4020 0%, #3c2010 100%);
+    border-color: var(--amber-dk); color: var(--amber);
+  }
+  .retro-btn.active-btn {
+    background: linear-gradient(180deg, var(--olive-lt) 0%, var(--olive) 100%);
+    border-color: #8aaa50; border-bottom-color: #2a3c14; color: var(--cream);
+    box-shadow: 0 0 10px rgba(74,92,42,0.4), 2px 2px 0 #1a0a04;
+  }
+
+  /* ── DIAL ────────────────────────────────────────────── */
+  .dial-section { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .dial-wrap { position: relative; width: 100px; height: 100px; }
+  .dial-svg { width: 100%; height: 100%; cursor: pointer; }
+  .dial-value-display {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; pointer-events: none;
+  }
+  .dial-number {
+    font-family: 'Share Tech Mono', monospace; font-size: 1.3rem;
+    color: var(--amber); text-shadow: 0 0 8px rgba(232,168,32,0.6); line-height: 1;
+  }
+  .dial-unit { font-family: 'Share Tech Mono', monospace; font-size: 0.55rem; letter-spacing: 0.15em; color: var(--amber-dk); margin-top: 2px; }
+  .interval-slider {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 6px;
+    border-radius: 3px; background: linear-gradient(90deg, var(--olive) 0%, var(--amber) 100%);
+    outline: none; border: 1px solid var(--amber-dk); cursor: pointer;
+  }
+  .interval-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ffd060, var(--amber-dk));
+    border: 2px solid var(--brown); box-shadow: 0 0 6px rgba(232,168,32,0.5); cursor: pointer;
+  }
+  .manual-interval-row { display: flex; gap: 6px; align-items: center; margin-top: 2px; }
+  .retro-input {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.85rem;
+    width: 62px; padding: 4px 6px; background: #0e0804;
+    border: 1.5px solid var(--amber-dk); border-radius: 2px;
+    color: var(--amber); text-align: center; outline: none;
+  }
+  .retro-input:focus { border-color: var(--amber); box-shadow: 0 0 6px rgba(232,168,32,0.3); }
+  .small-label { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; color: var(--amber-dk); }
+
+  /* ── AUDIO PANEL ─────────────────────────────────────── */
+  .audio-section { display: flex; flex-direction: column; gap: 8px; }
+
+  /* Mode tabs */
+  .audio-mode-tabs { display: flex; gap: 0; border: 1.5px solid #5a3520; border-radius: 3px; overflow: hidden; }
+  .mode-tab {
+    flex: 1; font-family: 'Share Tech Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 4px;
+    background: #1c0d06; border: none; color: var(--amber-dk); cursor: pointer;
+    transition: background 0.15s, color 0.15s; text-align: center;
+  }
+  .mode-tab:not(:last-child) { border-right: 1px solid #5a3520; }
+  .mode-tab.active { background: var(--brown-lt); color: var(--amber); }
+
+  /* Audio info box */
+  .audio-info-box {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.06em; color: var(--olive-lt);
+    background: rgba(0,0,0,0.4); border: 1px solid var(--olive);
+    border-radius: 2px; padding: 5px 8px; min-height: 28px;
+    word-break: break-all; line-height: 1.45;
+  }
+  .audio-info-box .track-name { color: var(--amber); }
+  .audio-info-box .no-track { opacity: 0.45; }
+
+  /* Per-slide track list */
+  .track-list {
+    display: flex; flex-direction: column; gap: 3px;
+    max-height: 120px; overflow-y: auto;
+  }
+  .track-list::-webkit-scrollbar { width: 4px; }
+  .track-list::-webkit-scrollbar-track { background: #0e0804; }
+  .track-list::-webkit-scrollbar-thumb { background: var(--amber-dk); border-radius: 2px; }
+
+  .track-item {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Share Tech Mono', monospace; font-size: 0.6rem;
+    padding: 3px 6px; border-radius: 2px;
+    background: rgba(0,0,0,0.3); border: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .track-item.playing { border-color: var(--olive); background: rgba(74,92,42,0.15); }
+  .track-item .track-idx { color: var(--amber-dk); min-width: 18px; }
+  .track-item .track-file {
+    color: var(--cream); opacity: 0.75; flex: 1;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .track-item .track-file.missing { color: var(--orange); opacity: 0.6; }
+  .track-item .track-indicator {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--olive); box-shadow: 0 0 5px var(--olive-lt);
+    flex-shrink: 0; display: none;
+  }
+  .track-item.playing .track-indicator { display: block; animation: blink 0.9s infinite; }
+
+  /* VU meter */
+  .vu-meter { display: flex; gap: 3px; align-items: flex-end; height: 24px; }
+  .vu-bar { width: 6px; background: var(--olive); border-radius: 1px; transition: height 0.1s ease; min-height: 3px; }
+
+  /* Toggle */
+  .toggle-row { display: flex; align-items: center; gap: 10px; }
+  .toggle-switch { position: relative; width: 46px; height: 22px; flex-shrink: 0; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute; inset: 0; background: #2c1810;
+    border: 1.5px solid #5a3520; border-radius: 11px; cursor: pointer; transition: background 0.2s;
+  }
+  .toggle-track::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 14px; height: 14px; background: var(--amber-dk); border-radius: 50%;
+    transition: transform 0.2s, background 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .toggle-switch input:checked + .toggle-track { background: var(--olive); border-color: var(--olive-lt); }
+  .toggle-switch input:checked + .toggle-track::after { transform: translateX(24px); background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+  .toggle-label { font-family: 'Share Tech Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; color: var(--cream); }
+
+  /* ── FOOTER ──────────────────────────────────────────── */
+  footer {
+    text-align: center; padding: 14px 20px 20px;
+    font-family: 'Share Tech Mono', monospace; font-size: 0.58rem;
+    letter-spacing: 0.25em; color: rgba(176,122,8,0.4); text-transform: uppercase;
+  }
+
+  /* ── RESPONSIVE ──────────────────────────────────────── */
+  @media (max-width: 720px) {
+    .control-panel { grid-template-columns: 1fr; }
+    .panel-section { border-bottom: 1px solid rgba(176,122,8,0.2); padding-bottom: 12px; }
+    .panel-section:last-child { border-bottom: none; }
+    .dial-section { flex-direction: row; align-items: center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-line">
+    <div class="brand-dot"></div>
+    <h1>RETRO SLIDESHOW</h1>
+    <div class="brand-dot"></div>
+  </div>
+  <p class="subtitle">Automatisches Bildprojektionssystem · Modell 1968</p>
+</header>
+
+<main class="stage">
+
+  <div class="projector-frame">
+    <div class="sprocket-strip">
+      <span id="filmLabel">BILD-SEQUENZ A</span>
+      <div class="sprockets">
+        <div class="sprocket-hole"></div><div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div><div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div><div class="sprocket-hole"></div>
+      </div>
+      <span id="filmDate">— AUFNAHME —</span>
+    </div>
+
+    <div class="viewer-wrap" id="viewer">
+      <div class="slide-placeholder" id="placeholder">
+        <div class="placeholder-icon">⬜</div>
+        <div>KEIN BILD GELADEN</div>
+        <div style="font-size:0.65rem;opacity:0.6">Bilder in /images/ ablegen</div>
+      </div>
+      <button class="nav-btn prev" onclick="changeSlide(-1)">‹</button>
+      <button class="nav-btn next" onclick="changeSlide(1)">›</button>
+      <div class="caption-bar">
+        <span class="caption-text" id="captionText">—</span>
+        <span class="slide-counter" id="slideCounter">0 / 0</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <div class="dot-strip" id="dotStrip"></div>
+  </div>
+
+  <!-- CONTROL PANEL -->
+  <div class="control-panel">
+
+    <!-- LEFT: Slideshow -->
+    <div class="panel-section">
+      <div class="panel-label">◈ Diasteuerung</div>
+      <div class="btn-row">
+        <button class="retro-btn" id="playBtn" onclick="toggleAutoplay()">▶ AUTO</button>
+        <button class="retro-btn" onclick="changeSlide(-1)">◂ ZURÜCK</button>
+        <button class="retro-btn" onclick="changeSlide(1)">VOR ▸</button>
+      </div>
+      <div class="toggle-row">
+        <label class="toggle-switch"><input type="checkbox" id="loopToggle" checked><div class="toggle-track"></div></label>
+        <span class="toggle-label">Endlosschleife</span>
+      </div>
+      <div class="toggle-row">
+        <label class="toggle-switch"><input type="checkbox" id="shuffleToggle"><div class="toggle-track"></div></label>
+        <span class="toggle-label">Zufallsreihenfolge</span>
+      </div>
+    </div>
+
+    <!-- CENTER: Dial -->
+    <div class="dial-section">
+      <div class="panel-label" style="text-align:center;border:none;margin:0;">◈ Intervall</div>
+      <div class="dial-wrap">
+        <svg class="dial-svg" id="dialSvg" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="46" fill="#1a0a04" stroke="#5a3520" stroke-width="2"/>
+          <g id="ticks"></g>
+          <circle cx="50" cy="50" r="36" fill="none" stroke="#2c1810" stroke-width="6"
+            stroke-dasharray="196 260" stroke-dashoffset="-32"
+            stroke-linecap="round" transform="rotate(-225 50 50)"/>
+          <circle cx="50" cy="50" r="36" fill="none" stroke="url(#dialGrad)" stroke-width="6"
+            id="dialArc" stroke-dasharray="0 260" stroke-dashoffset="-32"
+            stroke-linecap="round" transform="rotate(-225 50 50)"/>
+          <defs>
+            <linearGradient id="dialGrad" gradientTransform="rotate(90)">
+              <stop offset="0%" stop-color="#4a5c2a"/><stop offset="100%" stop-color="#e8a820"/>
+            </linearGradient>
+            <radialGradient id="knobGrad" cx="35%" cy="30%">
+              <stop offset="0%" stop-color="#5a3520"/><stop offset="100%" stop-color="#2c1810"/>
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="50" r="20" fill="url(#knobGrad)" stroke="#3a1e0a" stroke-width="1.5"/>
+          <circle cx="50" cy="50" r="14" fill="none" stroke="rgba(255,220,100,0.08)" stroke-width="1"/>
+          <line id="dialNeedle" x1="50" y1="50" x2="50" y2="34" stroke="var(--amber)" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="50" cy="50" r="4" fill="var(--amber-dk)" stroke="var(--amber)" stroke-width="1"/>
+        </svg>
+        <div class="dial-value-display">
+          <span class="dial-number" id="dialNumber">5</span>
+          <span class="dial-unit">SEK</span>
+        </div>
+      </div>
+      <input type="range" class="interval-slider" id="intervalSlider" min="1" max="30" value="5" step="1">
+      <div class="manual-interval-row">
+        <span class="small-label">Wert:</span>
+        <input type="number" class="retro-input" id="intervalInput" min="1" max="300" value="5">
+        <span class="small-label">Sek.</span>
+        <button class="retro-btn" style="font-size:0.75rem;padding:4px 10px" onclick="applyManualInterval()">OK</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: Audio -->
+    <div class="panel-section audio-section">
+      <div class="panel-label">◈ Audioband</div>
+
+      <!-- Mode selector -->
+      <div class="audio-mode-tabs">
+        <button class="mode-tab active" id="tabGlobal" onclick="setAudioMode('global')">◈ Global</button>
+        <button class="mode-tab" id="tabPerSlide" onclick="setAudioMode('perslide')">◈ Pro Dia</button>
+      </div>
+
+      <!-- Info display -->
+      <div class="audio-info-box" id="audioInfoBox">
+        <span class="no-track">Kein Audiofile</span>
+      </div>
+
+      <!-- Global audio controls (shown in global mode) -->
+      <div id="globalControls">
+        <div class="btn-row">
+          <button class="retro-btn" id="audioPlayBtn" onclick="toggleAudio()">▶ START</button>
+          <button class="retro-btn" onclick="stopAudio()">■ STOP</button>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle-switch"><input type="checkbox" id="audioAutoToggle"><div class="toggle-track"></div></label>
+          <span class="toggle-label">Auto-Start mit Slideshow</span>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle-switch"><input type="checkbox" id="audioLoopToggle" checked><div class="toggle-track"></div></label>
+          <span class="toggle-label">Audio-Schleife</span>
+        </div>
+      </div>
+
+      <!-- Per-slide controls (shown in perslide mode) -->
+      <div id="perSlideControls" style="display:none;">
+        <div class="track-list" id="trackList"></div>
+        <div class="btn-row" style="margin-top:4px;">
+          <button class="retro-btn" id="slideAudioPlayBtn" onclick="toggleSlideAudio()">▶ START</button>
+          <button class="retro-btn" onclick="stopSlideAudio()">■ STOP</button>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle-switch"><input type="checkbox" id="slideAudioAutoToggle" checked><div class="toggle-track"></div></label>
+          <span class="toggle-label">Auto bei Diawechsel</span>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle-switch"><input type="checkbox" id="slideAudioLoopToggle"><div class="toggle-track"></div></label>
+          <span class="toggle-label">Spur wiederholen</span>
+        </div>
+      </div>
+
+      <div class="vu-meter" id="vuMeter">
+        <div class="vu-bar" style="height:8px"></div><div class="vu-bar" style="height:14px"></div>
+        <div class="vu-bar" style="height:6px"></div><div class="vu-bar" style="height:20px"></div>
+        <div class="vu-bar" style="height:10px"></div><div class="vu-bar" style="height:16px"></div>
+        <div class="vu-bar" style="height:5px"></div><div class="vu-bar" style="height:18px"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>◈ Retro Slideshow MK II — Bildprojektionssystem ◈ Alle Rechte vorbehalten · Anno 1968 ◈</footer>
+
+<!-- Two audio players: global + per-slide -->
+<audio id="audioPlayerGlobal" preload="auto"></audio>
+<audio id="audioPlayerSlide"  preload="auto"></audio>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  KONFIGURATION
+// ═══════════════════════════════════════════════════════════
+
+const SLIDES = [
+  {
+    src:     'images/01.png',
+    caption: 'Cavern Club, Liverpool, 10 Mathew Street',
+    audio:   'audio/track1.mp3'      // Pro-Dia-Audio (null = keins)
+  },
+  {
+    src:     'images/02.png',
+    caption: 'Woodstock Festival, White Lake, Bethel, New York',
+    audio:   'audio/track2.mp3'
+  },
+  {
+    src:     'images/03.png',
+    caption: ' Devil’s Crossroads, Clarksdale, Mississippi',
+    audio:  'audio/track3.mp3'                   // Kein Audio für dieses Dia
+  },
+  {
+    src:     'images/04.png',
+    caption: 'Route 66',
+    audio:   'audio/track4.mp3'
+  },
+  {
+    src:     'images/05.png',
+    caption: 'Onkel Pös Carnegie Hall, Hamburg',
+    audio:   'audio/track5.mp3'
+  },
+
+   {
+    src:     'images/06.png',
+    caption: 'Amphitheater, Pompeji',
+    audio:   'audio/track6.mp3'
+  },
+   {
+    src:     'images/07.png',
+    caption: 'Star-Club, Hamburg',
+    audio:   'audio/track7.mp3'
+  },
+   {
+    src:     'images/08.png',
+    caption: 'Su Studio, 706 Union Avenue, Memphis, Tennessee',
+    audio:   'audio/track8.mp3'
+  },
+];
+
+// Globales Audio (für den "Global"-Modus)
+const GLOBAL_AUDIO_FILE = 'audio/global.mp3';
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+
+let currentSlide  = 0;
+let displayIndex  = 0;
+let shuffleOrder  = null;
+let autoplayTimer = null;
+let progressTimer = null;
+let progressStart = null;
+let intervalSec   = 5;
+let isPlaying     = false;
+let vuAnimFrame   = null;
+let audioMode     = 'global'; // 'global' | 'perslide'
+
+const globalPlayer    = document.getElementById('audioPlayerGlobal');
+const slidePlayer     = document.getElementById('audioPlayerSlide');
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+
+function init() {
+  buildSlides();
+  buildDots();
+  buildTrackList();
+  buildDialTicks();
+  setupDial();
+  setupGlobalAudio();
+  setupSlideAudio();
+  showSlide(0);
+  updateIntervalDisplay(intervalSec);
+
+  document.getElementById('intervalSlider').addEventListener('input', e => {
+    intervalSec = parseInt(e.target.value);
+    document.getElementById('intervalInput').value = intervalSec;
+    updateIntervalDisplay(intervalSec);
+    if (isPlaying) { stopAutoplay(); startAutoplay(); }
+  });
+  document.getElementById('audioLoopToggle').addEventListener('change', e => {
+    globalPlayer.loop = e.target.checked;
+  });
+  document.getElementById('slideAudioLoopToggle').addEventListener('change', e => {
+    slidePlayer.loop = e.target.checked;
+  });
+
+  const now = new Date();
+  document.getElementById('filmDate').textContent =
+    now.toLocaleDateString('de-DE', {day:'2-digit', month:'long', year:'numeric'});
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BUILD DOM
+// ═══════════════════════════════════════════════════════════
+
+function buildSlides() {
+  const viewer = document.getElementById('viewer');
+  const ph     = document.getElementById('placeholder');
+  SLIDES.forEach((s, i) => {
+    const img = document.createElement('img');
+    img.src = s.src; img.alt = s.caption;
+    img.className = 'slide'; img.dataset.index = i;
+    viewer.insertBefore(img, ph);
+  });
+  if (SLIDES.length > 0) ph.style.display = 'none';
+}
+
+function buildDots() {
+  const strip = document.getElementById('dotStrip');
+  strip.innerHTML = '';
+  SLIDES.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.onclick = () => jumpTo(i);
+    strip.appendChild(d);
+  });
+}
+
+function buildTrackList() {
+  const list = document.getElementById('trackList');
+  list.innerHTML = '';
+  SLIDES.forEach((s, i) => {
+    const item = document.createElement('div');
+    item.className = 'track-item';
+    item.id = `track-item-${i}`;
+
+    const hasAudio = !!s.audio;
+    const fname = s.audio ? s.audio.split('/').pop() : '— kein Audio —';
+
+    item.innerHTML = `
+      <span class="track-idx">${String(i+1).padStart(2,'0')}</span>
+      <span class="track-file ${hasAudio ? '' : 'missing'}">${fname}</span>
+      <div class="track-indicator"></div>
+    `;
+    item.onclick = () => jumpTo(i);
+    list.appendChild(item);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  AUDIO MODE
+// ═══════════════════════════════════════════════════════════
+
+function setAudioMode(mode) {
+  audioMode = mode;
+  document.getElementById('tabGlobal').classList.toggle('active', mode === 'global');
+  document.getElementById('tabPerSlide').classList.toggle('active', mode === 'perslide');
+  document.getElementById('globalControls').style.display   = mode === 'global'   ? '' : 'none';
+  document.getElementById('perSlideControls').style.display = mode === 'perslide' ? '' : 'none';
+
+  // Stop the other player when switching
+  if (mode === 'global') {
+    stopSlideAudio();
+  } else {
+    stopAudio();
+    // Immediately load + play the current slide's audio if auto is on
+    loadSlideAudio(currentSlide);
+    if (document.getElementById('slideAudioAutoToggle').checked) {
+      slidePlayer.play().catch(() => {});
+    }
+  }
+  updateAudioInfoBox();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SLIDE NAVIGATION
+// ═══════════════════════════════════════════════════════════
+
+function getOrder() {
+  if (document.getElementById('shuffleToggle').checked) {
+    if (!shuffleOrder || shuffleOrder.length !== SLIDES.length)
+      shuffleOrder = [...Array(SLIDES.length).keys()].sort(() => Math.random() - 0.5);
+    return shuffleOrder;
+  }
+  return [...Array(SLIDES.length).keys()];
+}
+
+function showSlide(idx) {
+  if (SLIDES.length === 0) return;
+  const order = getOrder();
+  displayIndex = ((idx % order.length) + order.length) % order.length;
+  currentSlide = order[displayIndex];
+
+  document.querySelectorAll('.slide').forEach((s, i) =>
+    s.classList.toggle('active', i === currentSlide));
+  document.querySelectorAll('.dot').forEach((d, i) =>
+    d.classList.toggle('active', i === currentSlide));
+
+  document.getElementById('captionText').textContent  = SLIDES[currentSlide]?.caption || '—';
+  document.getElementById('slideCounter').textContent = `${displayIndex + 1} / ${SLIDES.length}`;
+  document.getElementById('filmLabel').textContent    = `BILD-SEQUENZ ${String.fromCharCode(65 + displayIndex % 26)}`;
+
+  // Per-slide audio: load + autoplay if in perslide mode
+  if (audioMode === 'perslide') {
+    loadSlideAudio(currentSlide);
+    if (document.getElementById('slideAudioAutoToggle').checked) {
+      slidePlayer.play().catch(() => {});
+    }
+  }
+
+  // Highlight track list row
+  document.querySelectorAll('.track-item').forEach((el, i) =>
+    el.classList.toggle('playing', i === currentSlide));
+
+  // Scroll track list to show active
+  const activeItem = document.getElementById(`track-item-${currentSlide}`);
+  if (activeItem) activeItem.scrollIntoView({block:'nearest', behavior:'smooth'});
+
+  updateAudioInfoBox();
+}
+
+function changeSlide(dir) {
+  if (SLIDES.length === 0) return;
+  showSlide(displayIndex + dir);
+  if (isPlaying) { stopAutoplay(); startAutoplay(); }
+}
+
+function jumpTo(slideIndex) {
+  const order = getOrder();
+  const pos = order.indexOf(slideIndex);
+  showSlide(pos >= 0 ? pos : slideIndex);
+  if (isPlaying) { stopAutoplay(); startAutoplay(); }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  AUTOPLAY
+// ═══════════════════════════════════════════════════════════
+
+function toggleAutoplay() {
+  if (isPlaying) stopAutoplay(); else startAutoplay();
+}
+
+function startAutoplay() {
+  isPlaying = true;
+  document.getElementById('playBtn').textContent = '⏸ PAUSE';
+  document.getElementById('playBtn').classList.add('active-btn');
+
+  if (audioMode === 'global' && document.getElementById('audioAutoToggle').checked && !globalPlayer.paused === false) {
+    globalPlayer.play().catch(() => {});
+  }
+
+  startProgress();
+  autoplayTimer = setTimeout(function advance() {
+    const order = getOrder();
+    if (!document.getElementById('loopToggle').checked && displayIndex >= order.length - 1) {
+      stopAutoplay(); return;
+    }
+    changeSlide(1);
+    startProgress();
+    autoplayTimer = setTimeout(advance, intervalSec * 1000);
+  }, intervalSec * 1000);
+}
+
+function stopAutoplay() {
+  isPlaying = false;
+  document.getElementById('playBtn').textContent = '▶ AUTO';
+  document.getElementById('playBtn').classList.remove('active-btn');
+  clearTimeout(autoplayTimer);
+  stopProgress();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PROGRESS BAR
+// ═══════════════════════════════════════════════════════════
+
+function startProgress() {
+  stopProgress();
+  const fill = document.getElementById('progressFill');
+  fill.style.transition = 'none'; fill.style.width = '0%';
+  progressStart = Date.now();
+  function tick() {
+    const elapsed = (Date.now() - progressStart) / (intervalSec * 1000);
+    fill.style.width = Math.min(elapsed * 100, 100) + '%';
+    if (elapsed < 1) progressTimer = requestAnimationFrame(tick);
+  }
+  progressTimer = requestAnimationFrame(tick);
+}
+
+function stopProgress() {
+  if (progressTimer) cancelAnimationFrame(progressTimer);
+  document.getElementById('progressFill').style.width = '0%';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GLOBAL AUDIO
+// ═══════════════════════════════════════════════════════════
+
+function setupGlobalAudio() {
+  globalPlayer.src  = GLOBAL_AUDIO_FILE;
+  globalPlayer.loop = document.getElementById('audioLoopToggle').checked;
+  globalPlayer.addEventListener('play',  () => { startVU(); updateAudioBtnState('audioPlayBtn', true); updateAudioInfoBox(); });
+  globalPlayer.addEventListener('pause', () => { if (slidePlayer.paused) stopVU(); updateAudioBtnState('audioPlayBtn', false); });
+  globalPlayer.addEventListener('ended', () => { if (slidePlayer.paused) stopVU(); updateAudioBtnState('audioPlayBtn', false); });
+  globalPlayer.addEventListener('error', () => updateAudioInfoBox());
+}
+
+function toggleAudio() {
+  if (!globalPlayer.paused) globalPlayer.pause();
+  else globalPlayer.play().catch(() => {});
+}
+
+function stopAudio() {
+  globalPlayer.pause(); globalPlayer.currentTime = 0;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PER-SLIDE AUDIO
+// ═══════════════════════════════════════════════════════════
+
+function setupSlideAudio() {
+  slidePlayer.loop = document.getElementById('slideAudioLoopToggle').checked;
+  slidePlayer.addEventListener('play',  () => { startVU(); updateAudioBtnState('slideAudioPlayBtn', true); updateAudioInfoBox(); });
+  slidePlayer.addEventListener('pause', () => { if (globalPlayer.paused) stopVU(); updateAudioBtnState('slideAudioPlayBtn', false); });
+  slidePlayer.addEventListener('ended', () => { if (globalPlayer.paused) stopVU(); updateAudioBtnState('slideAudioPlayBtn', false); });
+}
+
+function loadSlideAudio(idx) {
+  const track = SLIDES[idx]?.audio;
+  slidePlayer.pause();
+  slidePlayer.currentTime = 0;
+  if (track) {
+    slidePlayer.src  = track;
+    slidePlayer.loop = document.getElementById('slideAudioLoopToggle').checked;
+    slidePlayer.load();
+  } else {
+    slidePlayer.src = '';
+  }
+}
+
+function toggleSlideAudio() {
+  if (!slidePlayer.src || SLIDES[currentSlide]?.audio == null) return;
+  if (!slidePlayer.paused) slidePlayer.pause();
+  else slidePlayer.play().catch(() => {});
+}
+
+function stopSlideAudio() {
+  slidePlayer.pause(); slidePlayer.currentTime = 0;
+}
+
+// ── Info box ──────────────────────────────────────────────
+
+function updateAudioInfoBox() {
+  const box = document.getElementById('audioInfoBox');
+  if (audioMode === 'global') {
+    const src = GLOBAL_AUDIO_FILE.split('/').pop();
+    const playing = !globalPlayer.paused;
+    box.innerHTML = `<span class="${playing ? 'track-name' : ''}">${playing ? '▶ ' : ''}${src}</span>`;
+  } else {
+    const track = SLIDES[currentSlide]?.audio;
+    if (track) {
+      const fname   = track.split('/').pop();
+      const playing = !slidePlayer.paused;
+      box.innerHTML = `<span class="small-label" style="display:block;margin-bottom:2px;">DIA ${currentSlide+1}:</span>`
+                    + `<span class="${playing ? 'track-name' : ''}">${playing ? '▶ ' : ''}${fname}</span>`;
+    } else {
+      box.innerHTML = `<span class="small-label" style="display:block;margin-bottom:2px;">DIA ${currentSlide+1}:</span>`
+                    + `<span class="no-track">— Kein Audio zugewiesen —</span>`;
+    }
+  }
+}
+
+function updateAudioBtnState(btnId, playing) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.textContent = playing ? '⏸ PAUSE' : '▶ START';
+  btn.classList.toggle('active-btn', playing);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  VU METER
+// ═══════════════════════════════════════════════════════════
+
+function startVU() {
+  if (vuAnimFrame) return;
+  const bars = document.querySelectorAll('.vu-bar');
+  function animate() {
+    bars.forEach(b => {
+      const h = 3 + Math.random() * 20;
+      b.style.height = h + 'px';
+      b.style.background = h < 11 ? '#4a5c2a' : h < 18 ? '#e8a820' : '#c4531a';
+    });
+    vuAnimFrame = requestAnimationFrame(animate);
+  }
+  vuAnimFrame = requestAnimationFrame(animate);
+}
+
+function stopVU() {
+  if (vuAnimFrame) { cancelAnimationFrame(vuAnimFrame); vuAnimFrame = null; }
+  document.querySelectorAll('.vu-bar').forEach(b => {
+    b.style.height = '3px'; b.style.background = '#4a5c2a';
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INTERVAL DIAL
+// ═══════════════════════════════════════════════════════════
+
+function buildDialTicks() {
+  const g = document.getElementById('ticks');
+  for (let i = 0; i <= 10; i++) {
+    const angle = -225 + i * (270 / 10);
+    const rad   = angle * Math.PI / 180;
+    const r1    = 42, r2 = i % 5 === 0 ? 38 : 40;
+    const x1 = 50 + r1 * Math.sin(rad), y1 = 50 - r1 * Math.cos(rad);
+    const x2 = 50 + r2 * Math.sin(rad), y2 = 50 - r2 * Math.cos(rad);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+    line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+    line.setAttribute('stroke', i % 5 === 0 ? '#e8a820' : '#5a3520');
+    line.setAttribute('stroke-width', i % 5 === 0 ? '1.5' : '1');
+    g.appendChild(line);
+  }
+}
+
+function updateIntervalDisplay(sec) {
+  document.getElementById('dialNumber').textContent = sec;
+  document.getElementById('intervalSlider').value   = Math.min(sec, 30);
+  document.getElementById('intervalInput').value    = sec;
+  const t = Math.min(sec, 30) / 30;
+  const angle = -135 + t * 270, rad = angle * Math.PI / 180;
+  document.getElementById('dialNeedle').setAttribute('x2', 50 + 16 * Math.sin(rad));
+  document.getElementById('dialNeedle').setAttribute('y2', 50 - 16 * Math.cos(rad));
+  const filled = t * 196;
+  document.getElementById('dialArc').setAttribute('stroke-dasharray', `${filled} 260`);
+}
+
+function setupDial() {
+  const svg = document.getElementById('dialSvg');
+  let dragging = false;
+  function angleFromEvent(e) {
+    const rect = svg.getBoundingClientRect();
+    const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+    const cx2 = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy2 = e.touches ? e.touches[0].clientY : e.clientY;
+    return Math.atan2(cx2 - cx, -(cy2 - cy)) * 180 / Math.PI;
+  }
+  function fromAngle(a) {
+    return Math.round(1 + ((Math.max(-135, Math.min(135, a)) + 135) / 270) * 29);
+  }
+  svg.addEventListener('mousedown', e => { dragging = true; e.preventDefault(); });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    intervalSec = fromAngle(angleFromEvent(e));
+    updateIntervalDisplay(intervalSec);
+    if (isPlaying) { stopAutoplay(); startAutoplay(); }
+  });
+  window.addEventListener('mouseup', () => dragging = false);
+  svg.addEventListener('touchstart', e => { dragging = true; e.preventDefault(); }, {passive:false});
+  window.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    intervalSec = fromAngle(angleFromEvent(e));
+    updateIntervalDisplay(intervalSec);
+  }, {passive:true});
+  window.addEventListener('touchend', () => dragging = false);
+}
+
+function applyManualInterval() {
+  const v = parseInt(document.getElementById('intervalInput').value);
+  if (isNaN(v) || v < 1) return;
+  intervalSec = Math.min(v, 300);
+  updateIntervalDisplay(intervalSec);
+  if (isPlaying) { stopAutoplay(); startAutoplay(); }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  KEYBOARD
+// ═══════════════════════════════════════════════════════════
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowLeft')  changeSlide(-1);
+  if (e.key === 'ArrowRight') changeSlide(1);
+  if (e.key === ' ') { e.preventDefault(); toggleAutoplay(); }
+  if (e.key === 'm' || e.key === 'M') {
+    audioMode === 'global' ? toggleAudio() : toggleSlideAudio();
+  }
+});
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
